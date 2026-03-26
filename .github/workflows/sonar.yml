@@ -1,0 +1,45 @@
+name: SonarCloud
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - deploy-test
+  pull_request:
+
+jobs:
+  sonar:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install core-service dependencies
+        run: npm ci
+        working-directory: services/core-service
+
+      - name: Install matching-service dependencies
+        run: npm ci
+        working-directory: services/matching-service
+
+      - name: Install claims-service dependencies
+        run: npm ci
+        working-directory: services/claims-service
+
+      - name: Install notifications-service dependencies
+        run: npm ci
+        working-directory: services/notifications-service
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarqube-scan-action@v7
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

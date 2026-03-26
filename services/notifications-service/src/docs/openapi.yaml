@@ -1,0 +1,183 @@
+openapi: 3.0.3
+info:
+  title: FindIt Notifications Service API
+  version: 1.0.0
+servers:
+  - url: /
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: ok
+    NotificationCreateRequest:
+      type: object
+      required:
+        - userId
+        - type
+        - title
+        - message
+      properties:
+        userId:
+          type: string
+          example: user-1
+        type:
+          type: string
+          enum:
+            - MATCH_FOUND
+            - CLAIM_REQUESTED
+            - CLAIM_APPROVED
+            - CLAIM_REJECTED
+            - SYSTEM
+        title:
+          type: string
+          example: New match found
+        message:
+          type: string
+          example: A found item matches your lost post
+        meta:
+          type: object
+          additionalProperties: true
+          example:
+            postId: post-123
+            matchScore: 0.82
+    Notification:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        type:
+          type: string
+        title:
+          type: string
+        message:
+          type: string
+        meta:
+          nullable: true
+          oneOf:
+            - type: object
+              additionalProperties: true
+            - type: array
+              items: {}
+        read:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+    NotificationsListResponse:
+      type: object
+      properties:
+        count:
+          type: integer
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Notification"
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        updated:
+          type: integer
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+  /notify:
+    post:
+      summary: Create a notification
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NotificationCreateRequest"
+      responses:
+        "201":
+          description: Notification created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Notification"
+        "400":
+          description: Validation error
+        "401":
+          description: Unauthorized
+  /notifications/me:
+    get:
+      summary: Get current user notifications
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: unreadOnly
+          schema:
+            type: boolean
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+      responses:
+        "200":
+          description: Notification list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationsListResponse"
+        "401":
+          description: Unauthorized
+  /notifications/{id}/read:
+    patch:
+      summary: Mark one notification as read
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Notification marked as read
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "401":
+          description: Unauthorized
+        "404":
+          description: Notification not found
+  /notifications/read-all:
+    patch:
+      summary: Mark all current user notifications as read
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: All notifications marked as read
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"

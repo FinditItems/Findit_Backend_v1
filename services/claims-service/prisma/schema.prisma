@@ -1,0 +1,37 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ClaimStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+model Claim {
+  id              String      @id @default(uuid())
+  postId           String
+  claimantUserId   String
+  ownerUserId      String
+  message          String?
+  proof            String?
+  status           ClaimStatus @default(PENDING)
+
+  reviewedAt       DateTime?
+  reviewedByUserId String?
+
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  @@index([postId])
+  @@index([claimantUserId])
+  @@index([ownerUserId])
+  @@index([status])
+}

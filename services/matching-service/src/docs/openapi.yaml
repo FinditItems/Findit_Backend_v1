@@ -1,0 +1,113 @@
+openapi: 3.0.3
+info:
+  title: FindIt Matching Service API
+  version: 1.0.0
+  description: Matching service for ranking possible lost and found item matches.
+
+servers:
+  - url: /
+
+tags:
+  - name: Health
+  - name: Matching
+
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health check
+      responses:
+        "200":
+          description: Service is healthy
+
+  /match:
+    post:
+      tags:
+        - Matching
+      summary: Return ranked matches for a given post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - post
+              properties:
+                post:
+                  type: object
+                  required:
+                    - id
+                    - type
+                    - category
+                    - location
+                    - date
+                    - description
+                  properties:
+                    id:
+                      type: string
+                      example: post-123
+                    type:
+                      type: string
+                      enum: [LOST, FOUND]
+                      example: LOST
+                    category:
+                      type: string
+                      example: Laptop
+                    location:
+                      type: string
+                      example: Library
+                    date:
+                      type: string
+                      format: date-time
+                      example: 2026-03-16T10:00:00.000Z
+                    description:
+                      type: string
+                      example: Black Dell laptop with charger
+                    imageUrl:
+                      type: string
+                      nullable: true
+                      example: null
+                    status:
+                      type: string
+                      example: OPEN
+                    userId:
+                      type: string
+                      example: user-1
+      responses:
+        "200":
+          description: Ranked matches returned successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                    example: 1
+                  matches:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        postId:
+                          type: string
+                          example: post-123
+                        matchedPostId:
+                          type: string
+                          example: found-001
+                        matchScore:
+                          type: integer
+                          example: 85
+                        reasons:
+                          type: array
+                          items:
+                            type: string
+                          example:
+                            - Same category
+                            - Similar location
+                            - Date is very close
+                            - Some keyword overlap
+        "400":
+          description: Invalid request payload

@@ -1,0 +1,330 @@
+openapi: 3.0.3
+info:
+  title: FindIt Core Service API
+  version: 1.0.0
+servers:
+  - url: http://localhost:4001
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        "200":
+          description: OK
+
+  /auth/register:
+    post:
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [fullName, email, password]
+              properties:
+                fullName:
+                  type: string
+                  example: Test User
+                email:
+                  type: string
+                  example: test@uni.lk
+                password:
+                  type: string
+                  example: Password123!
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              examples:
+                success:
+                  value:
+                    user:
+                      id: user-id
+                      fullName: Test User
+                      email: test@uni.lk
+                      role: student
+                    token: jwt-token
+        "409":
+          description: Email already in use
+        "400":
+          description: Validation error
+
+  /auth/login:
+    post:
+      summary: Login and get JWT
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  example: test@uni.lk
+                password:
+                  type: string
+                  example: Password123!
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              examples:
+                success:
+                  value:
+                    user:
+                      id: user-id
+                      fullName: Test User
+                      email: test@uni.lk
+                      role: student
+                    token: jwt-token
+        "401":
+          description: Invalid credentials
+        "400":
+          description: Validation error
+
+  /posts:
+    post:
+      summary: Create a lost or found post
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePostInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              examples:
+                success:
+                  value:
+                    post:
+                      id: post-id
+                      type: LOST
+                      category: Laptop
+                      location: Library
+                      date: 2026-03-16T10:30:00.000Z
+                      description: Black Dell laptop with stickers
+                      imageUrl: https://example.com/laptop.jpg
+                      status: OPEN
+                      userId: user-id
+                      createdAt: 2026-03-16T10:31:00.000Z
+                      updatedAt: 2026-03-16T10:31:00.000Z
+                      user:
+                        id: user-id
+                        fullName: Test User
+                        email: test@uni.lk
+                        role: student
+                    matches: []
+        "400":
+          description: Validation error
+        "401":
+          description: Unauthorized
+    get:
+      summary: List posts with filters
+      parameters:
+        - in: query
+          name: type
+          schema:
+            type: string
+            enum: [LOST, FOUND]
+        - in: query
+          name: category
+          schema:
+            type: string
+        - in: query
+          name: location
+          schema:
+            type: string
+        - in: query
+          name: q
+          schema:
+            type: string
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [OPEN, CLOSED]
+        - in: query
+          name: mine
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              examples:
+                success:
+                  value:
+                    count: 1
+                    posts:
+                      - id: post-id
+                        type: LOST
+                        category: Laptop
+                        location: Library
+                        date: 2026-03-16T10:30:00.000Z
+                        description: Black Dell laptop with stickers
+                        imageUrl: https://example.com/laptop.jpg
+                        status: OPEN
+                        userId: user-id
+                        createdAt: 2026-03-16T10:31:00.000Z
+                        updatedAt: 2026-03-16T10:31:00.000Z
+                        user:
+                          id: user-id
+                          fullName: Test User
+                          email: test@uni.lk
+                          role: student
+        "401":
+          description: Unauthorized for mine=true
+
+  /posts/{id}:
+    get:
+      summary: Get a post by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              examples:
+                success:
+                  value:
+                    post:
+                      id: post-id
+                      type: LOST
+                      category: Laptop
+                      location: Library
+                      date: 2026-03-16T10:30:00.000Z
+                      description: Black Dell laptop with stickers
+                      imageUrl: https://example.com/laptop.jpg
+                      status: OPEN
+                      userId: user-id
+                      createdAt: 2026-03-16T10:31:00.000Z
+                      updatedAt: 2026-03-16T10:31:00.000Z
+                      user:
+                        id: user-id
+                        fullName: Test User
+                        email: test@uni.lk
+                        role: student
+        "404":
+          description: Not found
+    delete:
+      summary: Delete a post
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              examples:
+                success:
+                  value:
+                    message: Post deleted successfully
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+
+  /posts/{id}/close:
+    patch:
+      summary: Close a post
+      security:
+        - bearerAuth: []
+        - internalServiceKey: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              examples:
+                success:
+                  value:
+                    message: Post closed successfully
+                    post:
+                      id: post-id
+                      type: LOST
+                      category: Laptop
+                      location: Library
+                      date: 2026-03-16T10:30:00.000Z
+                      description: Black Dell laptop with stickers
+                      imageUrl: https://example.com/laptop.jpg
+                      status: CLOSED
+                      userId: user-id
+                      createdAt: 2026-03-16T10:31:00.000Z
+                      updatedAt: 2026-03-16T10:45:00.000Z
+                      user:
+                        id: user-id
+                        fullName: Test User
+                        email: test@uni.lk
+                        role: student
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    internalServiceKey:
+      type: apiKey
+      in: header
+      name: x-internal-service-key
+  schemas:
+    CreatePostInput:
+      type: object
+      required: [type, category, location, date, description]
+      properties:
+        type:
+          type: string
+          enum: [LOST, FOUND]
+        category:
+          type: string
+          example: Laptop
+        location:
+          type: string
+          example: Library
+        date:
+          type: string
+          format: date-time
+          example: 2026-03-15T10:30:00.000Z
+        description:
+          type: string
+          example: Black Dell laptop with stickers
+        imageUrl:
+          type: string
+          nullable: true

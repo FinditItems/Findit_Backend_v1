@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - deploy-test
+  pull_request:
+
+jobs:
+  build-services:
+    name: Build ${{ matrix.service }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - service: core-service
+            path: services/core-service
+            use_prisma: true
+          - service: matching-service
+            path: services/matching-service
+            use_prisma: false
+          - service: claims-service
+            path: services/claims-service
+            use_prisma: true
+          - service: notifications-service
+            path: services/notifications-service
+            use_prisma: false
+
+    defaults:
+      run:
+        working-directory: ${{ matrix.path }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: ${{ matrix.path }}/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        if: ${{ matrix.use_prisma }}
+        run: npx prisma generate
+
+      - name: Build service
+        run: npm run build

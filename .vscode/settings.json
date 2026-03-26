@@ -1,0 +1,10 @@
+{
+    "cSpell.words": [
+        "findit",
+        "healthcheck",
+        "initdb",
+        "isready",
+        "pgdata"
+    ],
+    "snyk.advanced.autoSelectOrganization": true
+}

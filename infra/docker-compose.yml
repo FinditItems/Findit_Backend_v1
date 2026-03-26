@@ -1,0 +1,76 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: findit_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  core-service:
+    build: ../services/core-service
+    ports:
+      - "4001:4000"
+    env_file:
+      - ../services/core-service/.env 
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  matching-service:
+    build: ../services/matching-service
+    ports:
+      - "4002:4000"
+    env_file:
+      - ../services/matching-service/.env 
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  claims-service:
+    build: ../services/claims-service
+    ports:
+      - "4003:4000"
+    env_file:
+      - ../services/claims-service/.env 
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  notifications-service:
+    build: ../services/notifications-service
+    ports:
+      - "4004:4000"
+    env_file:
+      - ../services/notifications-service/.env 
+    depends_on:
+      postgres:
+        condition: service_healthy  
+
+  api-gateway:
+    build: ../services/api-gateway
+    ports:
+      - "4005:4000"
+    env_file:
+      - ../services/api-gateway/.env
+    depends_on:
+      core-service:
+        condition: service_started
+      matching-service:
+        condition: service_started
+      claims-service:
+        condition: service_started
+      notifications-service:
+        condition: service_started
+
+volumes:
+  pgdata:

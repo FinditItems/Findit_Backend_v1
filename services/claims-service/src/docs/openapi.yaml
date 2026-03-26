@@ -1,0 +1,178 @@
+openapi: 3.0.3
+info:
+  title: Claims Service API
+  version: 1.0.0
+  description: API for claim submission and review workflow
+
+servers:
+  - url: http://localhost:4003
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    SubmitClaimRequest:
+      type: object
+      required:
+        - postId
+      properties:
+        postId:
+          type: string
+          example: "post-uuid-123"
+        message:
+          type: string
+          example: "This item is mine. I can identify the scratches."
+        proof:
+          type: string
+          example: "Blue sticker on the back"
+
+    Claim:
+      type: object
+      properties:
+        id:
+          type: string
+        postId:
+          type: string
+        claimantUserId:
+          type: string
+        ownerUserId:
+          type: string
+        message:
+          type: string
+          nullable: true
+        proof:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [PENDING, APPROVED, REJECTED, CANCELLED]
+        reviewedAt:
+          type: string
+          format: date-time
+          nullable: true
+        reviewedByUserId:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+security:
+  - bearerAuth: []
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      security: []
+      responses:
+        "200":
+          description: Service is running
+
+  /claims:
+    post:
+      summary: Submit a new claim
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmitClaimRequest"
+      responses:
+        "201":
+          description: Claim created
+        "400":
+          description: Invalid request
+        "401":
+          description: Unauthorized
+        "404":
+          description: Post not found
+        "409":
+          description: Duplicate pending claim
+
+  /claims/mine:
+    get:
+      summary: Get my submitted claims
+      responses:
+        "200":
+          description: List of my claims
+
+  /claims/received:
+    get:
+      summary: Get claims received on my posts
+      responses:
+        "200":
+          description: List of received claims
+
+  /claims/{id}:
+    get:
+      summary: Get claim by id
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Claim details
+        "404":
+          description: Claim not found
+
+  /claims/{id}/approve:
+    patch:
+      summary: Approve a claim
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Claim approved
+        "403":
+          description: Forbidden
+        "404":
+          description: Claim not found
+
+  /claims/{id}/reject:
+    patch:
+      summary: Reject a claim
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Claim rejected
+        "403":
+          description: Forbidden
+        "404":
+          description: Claim not found
+
+  /claims/{id}/cancel:
+    patch:
+      summary: Cancel my claim
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Claim cancelled
+        "403":
+          description: Forbidden
+        "404":
+          description: Claim not found
