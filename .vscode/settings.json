@@ -6,5 +6,9 @@
         "isready",
         "pgdata"
     ],
-    "snyk.advanced.autoSelectOrganization": true
+    "snyk.advanced.autoSelectOrganization": true,
+    "sonarlint.connectedMode.project": {
+        "connectionId": "findititems",
+        "projectKey": "FinditItems_Findit_Backend_v1"
+    }
 }
