@@ -16,6 +16,15 @@ function verifyToken(token: string) {
 
 export function requireAuth(req: Request, res: Response, next: NextFunction) {
   try {
+    const internalServiceKey = req.headers["x-internal-service-key"];
+    if(
+      env.INTERNAL_SERVICE_KEY &&
+      typeof internalServiceKey === "string" &&
+      internalServiceKey === env.INTERNAL_SERVICE_KEY   
+    ){
+      return next();
+    }
+    
     const token = getBearerToken(req.headers.authorization);
 
     if (!token) {
