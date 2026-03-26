@@ -65,8 +65,8 @@ export async function submitClaim(
       userId: post.userId,
       title: "New claim received",
       message: "A user submitted a claim for your item.",
-      type: "CLAIM_SUBMITTED",
-      metadata: { claimId: claim.id, postId },
+      type: "CLAIM_REQUESTED",
+      meta: { claimId: claim.id, postId },
     });
 
     return res.status(201).json({ claim });
@@ -201,7 +201,7 @@ export async function approveClaim(
       title: "Claim approved",
       message: "Your claim was approved.",
       type: "CLAIM_APPROVED",
-      metadata: { claimId: claim.id, postId: claim.postId },
+      meta: { claimId: claim.id, postId: claim.postId },
     });
 
     return res.json({
@@ -252,7 +252,7 @@ export async function rejectClaim(
       title: "Claim rejected",
       message: "Your claim was rejected.",
       type: "CLAIM_REJECTED",
-      metadata: { claimId: claim.id, postId: claim.postId },
+      meta: { claimId: claim.id, postId: claim.postId },
     });
 
     return res.json({

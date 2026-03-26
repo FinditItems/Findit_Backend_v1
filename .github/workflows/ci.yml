@@ -9,8 +9,8 @@ on:
   pull_request:
 
 jobs:
-  build-services:
-    name: Build ${{ matrix.service }}
+  build-and-test-services:
+    name: Build and Test ${{ matrix.service }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -27,7 +27,7 @@ jobs:
             use_prisma: true
           - service: notifications-service
             path: services/notifications-service
-            use_prisma: false
+            use_prisma: true
 
     defaults:
       run:
@@ -49,7 +49,10 @@ jobs:
 
       - name: Generate Prisma client
         if: ${{ matrix.use_prisma }}
-        run: npx prisma generate
+        run: npm run prisma:generate
 
       - name: Build service
         run: npm run build
+
+      - name: Run tests
+        run: npm test -- --runInBand

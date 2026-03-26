@@ -43,7 +43,7 @@ export async function createNotification(data: {
   title: string;
   message: string;
   type: string;
-  metadata?: unknown;
+  meta?: unknown;
 }) {
   try {
     await axios.post(`${env.NOTIFICATIONS_SERVICE_URL}/notify`, data, {

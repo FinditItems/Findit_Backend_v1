@@ -25,7 +25,7 @@ export async function findMatchesForPost(post: CreatedPostPayload) {
   try {
     const response = await axios.post(
       `${env.MATCHING_SERVICE_URL}/match`,
-      post,
+      {post},
       {
         headers: {
           "Content-Type": "application/json",
@@ -58,7 +58,7 @@ export async function notifyPossibleMatch(params: {
         title: "Possible match found",
         message: "We found possible matches for your post.",
         type: "MATCH_FOUND",
-        metadata: {
+        meta: {
           postId: params.postId,
           matches: params.matches,
         },
