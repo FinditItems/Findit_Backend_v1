@@ -8,6 +8,10 @@ on:
       - deploy-test
   pull_request:
 
+permissions:
+  contents: read
+  pull-requests: read
+
 jobs:
   sonar:
     runs-on: ubuntu-latest
@@ -22,6 +26,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: npm
+          cache-dependency-path: |
+            services/core-service/package-lock.json
+            services/matching-service/package-lock.json
+            services/claims-service/package-lock.json
+            services/notifications-service/package-lock.json
 
       - name: Install core-service dependencies
         run: npm ci
@@ -42,4 +52,5 @@ jobs:
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@v7
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
